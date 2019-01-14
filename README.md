@@ -154,6 +154,8 @@ wget -P models https://s3.amazonaws.com/amdegroot-models/vgg16_reducedfc.pth
 python train_ssd.py --datasets ~/data/VOC0712/VOC2007/ ~/data/VOC0712/VOC2012/ --validation_dataset ~/data/VOC0712/test/VOC2007/ --net vgg16-ssd --base_net models/vgg16_reducedfc.pth  --batch_size 24 --num_epochs 200 --scheduler "multi-step” —-milestones “120,160”
 ```
 ### inception3 SSD base ####
+
+'''
 Average Precision Per-class:
 aeroplane: 0.6197411572690619
 bicycle: 0.6602535625121898
@@ -177,6 +179,8 @@ train: 0.7248718609507996
 tvmonitor: 0.5519471165887223
 
 Average Precision Across All Classes:0.5462803157426371
+'''
+
 ## Training
 
 ```bash

@@ -155,7 +155,8 @@ python train_ssd.py --datasets ~/data/VOC0712/VOC2007/ ~/data/VOC0712/VOC2012/ -
 ```
 ### inception3 SSD base ####
 
-'''
+
+```
 Average Precision Per-class:
 aeroplane: 0.6197411572690619
 bicycle: 0.6602535625121898
@@ -179,7 +180,7 @@ train: 0.7248718609507996
 tvmonitor: 0.5519471165887223
 
 Average Precision Across All Classes:0.5462803157426371
-'''
+```
 
 ## Training
 

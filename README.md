@@ -153,6 +153,30 @@ The code to re-produce the model:
 wget -P models https://s3.amazonaws.com/amdegroot-models/vgg16_reducedfc.pth
 python train_ssd.py --datasets ~/data/VOC0712/VOC2007/ ~/data/VOC0712/VOC2012/ --validation_dataset ~/data/VOC0712/test/VOC2007/ --net vgg16-ssd --base_net models/vgg16_reducedfc.pth  --batch_size 24 --num_epochs 200 --scheduler "multi-step” —-milestones “120,160”
 ```
+### inception3 SSD base ####
+Average Precision Per-class:
+aeroplane: 0.6197411572690619
+bicycle: 0.6602535625121898
+bird: 0.4010148327561447
+boat: 0.4502756888507595
+bottle: 0.15692541252308118
+bus: 0.6740574210677446
+car: 0.6931125117785809
+cat: 0.6604022965352317
+chair: 0.3341877400737783
+cow: 0.47456600976208685
+diningtable: 0.5626345112162645
+dog: 0.6044133475127355
+horse: 0.7164340165693879
+motorbike: 0.6890371240067692
+person: 0.613925227520189
+pottedplant: 0.2091399413325572
+sheep: 0.5187794152948958
+sofa: 0.6098871207317648
+train: 0.7248718609507996
+tvmonitor: 0.5519471165887223
+
+Average Precision Across All Classes:0.5462803157426371
 ## Training
 
 ```bash

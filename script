@@ -79,3 +79,6 @@ models/inception_v3_google-1a9a5a14.pth
 multi-step
 --milestones
 120,160
+// MEMO
+2019-01-14 08:29:09,299 - root - INFO - Epoch: 199, Step: 600, Average Loss: 3.9606, Average Regression Loss 1.1700, Average Classification Loss: 2.7906
+2019-01-14 08:29:54,097 - root - INFO - Epoch: 199, Validation Loss: 3.7735, Validation Regression Loss 1.1811, Validation Classification Loss: 2.5924

@@ -6,6 +6,10 @@ from typing import List
 import math
 import torch.nn as nn
 import torch.nn.functional as F
+from vision.ssd.inception3_ssd import create_inception3_ssd
+from torch.nn import Conv2d, Sequential, ModuleList, ReLU, BatchNorm2d
+#from ..nn.inception import Inception3
+from vision.nn.inception import Inception3
 
 image_size = 300
 image_mean = np.array([123, 117, 104])  # RGB layout
@@ -96,12 +100,31 @@ def generate_ssd_priors(specs: List[SSDSpec], image_size, clamp=True) -> torch.T
         torch.clamp(priors, 0.0, 1.0, out=priors)
     return priors
 
+
+def freeze_net_layers(net):
+    for param in net.parameters():
+        param.requires_grad = False
+
+
 if __name__ == '__main__':
 
      priors = generate_ssd_priors(specs, image_size)
-     print("priors", priors )
+     print("priors", priors)
 
      input = torch.randn(3, 5, requires_grad=True)
      target = torch.randint(5, (3,), dtype=torch.int64)
      loss = F.cross_entropy(input, target)
      print("loss:", loss)
+     print("Build network.")
+     # let us go deep put the implementation of net archtecture here
+     base_net = Inception3(1001).layers
+
+     source_layer_indexes = [
+         (10, BatchNorm2d(288)),
+         len(base_net),
+     ]
+     #net = create_inception3_ssd(21)
+     print("Build network.")
+
+
+

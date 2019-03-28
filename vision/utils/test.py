@@ -8,8 +8,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from vision.ssd.inception3_ssd import create_inception3_ssd
 from torch.nn import Conv2d, Sequential, ModuleList, ReLU, BatchNorm2d
-#from ..nn.inception import Inception3
 from vision.nn.inception import Inception3
+from vision.ssd.inception3_ssd_network import Inception_SSD
+from vision.ssd.config import inception3_ssd_config as config
 
 image_size = 300
 image_mean = np.array([123, 117, 104])  # RGB layout
@@ -110,6 +111,7 @@ if __name__ == '__main__':
 
      priors = generate_ssd_priors(specs, image_size)
      print("priors", priors)
+     num_classes = 21
 
      input = torch.randn(3, 5, requires_grad=True)
      target = torch.randint(5, (3,), dtype=torch.int64)
@@ -117,14 +119,69 @@ if __name__ == '__main__':
      print("loss:", loss)
      print("Build network.")
      # let us go deep put the implementation of net archtecture here
+
      base_net = Inception3(1001).layers
 
      source_layer_indexes = [
          (10, BatchNorm2d(288)),
          len(base_net),
      ]
+     # source_layer_indexes = [
+     #     (10, BatchNorm2d(288)), 15
+     # ]
+
+     extras = ModuleList([
+         Sequential(
+             Conv2d(in_channels=768, out_channels=256, kernel_size=1),
+             ReLU(),
+             Conv2d(in_channels=256, out_channels=512, kernel_size=3, stride=2, padding=1),
+             ReLU()
+         ),
+         Sequential(
+             Conv2d(in_channels=512, out_channels=128, kernel_size=1),
+             ReLU(),
+             Conv2d(in_channels=128, out_channels=256, kernel_size=3, stride=2, padding=1),
+             ReLU()
+         ),
+         Sequential(
+             Conv2d(in_channels=256, out_channels=128, kernel_size=1),
+             ReLU(),
+             Conv2d(in_channels=128, out_channels=256, kernel_size=3),
+             ReLU()
+         ),
+         Sequential(
+             Conv2d(in_channels=256, out_channels=128, kernel_size=1),
+             ReLU(),
+             Conv2d(in_channels=128, out_channels=256, kernel_size=3),
+             ReLU()
+         )
+     ])
+
+     regression_headers = ModuleList([
+         Conv2d(in_channels=288, out_channels=4 * 4, kernel_size=3, padding=1),
+         Conv2d(in_channels=768, out_channels=6 * 4, kernel_size=3, padding=1),
+         Conv2d(in_channels=512, out_channels=6 * 4, kernel_size=3, padding=1),
+         Conv2d(in_channels=256, out_channels=6 * 4, kernel_size=3, padding=1),
+         Conv2d(in_channels=256, out_channels=4 * 4, kernel_size=3, padding=1),
+         Conv2d(in_channels=256, out_channels=4 * 4, kernel_size=3, padding=1),
+         # TODO: change to kernel_size=1, padding=0?
+     ])
+
+     classification_headers = ModuleList([
+         Conv2d(in_channels=288, out_channels=4 * num_classes, kernel_size=3, padding=1),
+         Conv2d(in_channels=768, out_channels=6 * num_classes, kernel_size=3, padding=1),
+         Conv2d(in_channels=512, out_channels=6 * num_classes, kernel_size=3, padding=1),
+         Conv2d(in_channels=256, out_channels=6 * num_classes, kernel_size=3, padding=1),
+         Conv2d(in_channels=256, out_channels=4 * num_classes, kernel_size=3, padding=1),
+         Conv2d(in_channels=256, out_channels=4 * num_classes, kernel_size=3, padding=1),
+         # TODO: change to kernel_size=1, padding=0?
+     ])
+
+    #just build the network architecture
+     net = Inception_SSD(num_classes, base_net, source_layer_indexes, extras, classification_headers,
+                          regression_headers, is_test=False, config=config, transform_input=False)
      #net = create_inception3_ssd(21)
-     print("Build network.")
+     print("Build network already")
 
 
 

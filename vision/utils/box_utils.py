@@ -144,7 +144,7 @@ def iou_of(boxes0, boxes1, eps=1e-5):
     overlap_right_bottom = torch.min(boxes0[..., 2:], boxes1[..., 2:])
 
     overlap_area = area_of(overlap_left_top, overlap_right_bottom)
-    area0 = area_of(boxes0[..., :2], boxes0[..., 2:])
+    area0 = area_of(boxes0[..., :2], boxes0[..., 2:])   # the first two and the last two
     area1 = area_of(boxes1[..., :2], boxes1[..., 2:])
     return overlap_area / (area0 + area1 - overlap_area + eps)
 

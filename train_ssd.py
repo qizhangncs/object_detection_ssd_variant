@@ -114,7 +114,7 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
     running_loss = 0.0
     running_regression_loss = 0.0
     running_classification_loss = 0.0
-    for i, data in enumerate(loader):
+    for i, data in enumerate(loader):   # i-th batch id, sample_batched
         images, boxes, labels = data
         images = images.to(device)
         boxes = boxes.to(device)

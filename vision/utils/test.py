@@ -126,9 +126,6 @@ if __name__ == '__main__':
          (10, BatchNorm2d(288)),
          len(base_net),
      ]
-     # source_layer_indexes = [
-     #     (10, BatchNorm2d(288)), 15
-     # ]
 
      extras = ModuleList([
          Sequential(

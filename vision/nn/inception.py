@@ -91,6 +91,7 @@ class Inception3(nn.Module):
         #     nn.AvgPool2d(kernel_size=8),
         #     self.fc
         # )
+        # Registration is based on this configuration, source_layer_indexes
         self.layers = nn.Sequential(
             self.Conv2d_1a_3x3,
             self.Conv2d_2a_3x3,

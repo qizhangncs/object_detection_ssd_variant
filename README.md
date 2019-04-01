@@ -304,5 +304,10 @@ python eval_ssd.py --net vgg16-ssd  --dataset ~/data/VOC0712/test/VOC2007/ --tra
 
 1. Resnet34 Based Model.
 2. BatchNorm Fusion.
+3. modify the priors and gt_bbox association rules, ignore the samples
+where the ious = [0.4, 0.6]
+4. narrow down the training scope, only train cars, ped, cyc, and background
 # object-detection_SSD
 # object_detection_ssd_variant
+
+

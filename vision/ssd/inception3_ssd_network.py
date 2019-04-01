@@ -61,7 +61,7 @@ class Inception_SSD(nn.Module):
             else:
                 added_layer = None
                 path = None
-            for layer in self.base_net[start_layer_index: end_layer_index]:
+            for layer in self.base_net[start_layer_index: end_layer_index]: ###########
                 x = layer(x)
             if added_layer:
                 y = added_layer(x)

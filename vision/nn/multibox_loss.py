@@ -29,12 +29,12 @@ class MultiboxLoss(nn.Module):
             confidence (batch_size, num_priors, num_classes): class predictions.
             locations (batch_size, num_priors, 4): predicted locations.
             labels (batch_size, num_priors): real labels of all the priors.
-            boxes (batch_size, num_priors, 4): real boxes corresponding all the priors.
+            boxes (batch_size, num_priors, 4): real boxes corresponding all the priors i.e. in location domain
         """
         num_classes = confidence.size(2)
         with torch.no_grad():
             # derived from cross_entropy=sum(log(p))
-            loss = -F.log_softmax(confidence, dim=2)[:, :, 0]
+            loss = -F.log_softmax(confidence, dim=2)[:, :, 0]  # the log_softmax value of being classified as background
             mask = box_utils.hard_negative_mining(loss, labels, self.neg_pos_ratio)
 
         confidence = confidence[mask, :]

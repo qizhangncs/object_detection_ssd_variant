@@ -7,7 +7,8 @@ image_size = 300
 image_mean = np.array([123, 117, 104])  # RGB layout
 image_std = 1.0
 
-iou_threshold = 0.45
+iou_threshold = 0.4
+iou_threshold2 = 0.6
 center_variance = 0.1
 size_variance = 0.2
 

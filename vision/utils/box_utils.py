@@ -150,7 +150,7 @@ def iou_of(boxes0, boxes1, eps=1e-5):
 
 
 def assign_priors(gt_boxes, gt_labels, corner_form_priors,
-                  iou_threshold):
+                  iou_threshold, iou_threshold2):
     """Assign ground truth boxes and targets to priors.
 
     Args:
@@ -175,6 +175,7 @@ def assign_priors(gt_boxes, gt_labels, corner_form_priors,
     # size: num_priors
     labels = gt_labels[best_target_per_prior_index]
     labels[best_target_per_prior < iou_threshold] = 0  # the backgournd id
+    labels[best_target_per_prior >= iou_threshold and best_target_per_prior < iou_threshold2] = -1  # the backgournd id] = 0  # the backgournd id
     boxes = gt_boxes[best_target_per_prior_index]
     return boxes, labels
 
@@ -194,10 +195,12 @@ def hard_negative_mining(loss, labels, neg_pos_ratio):
         neg_pos_ratio:  the ratio between the negative examples and positive examples.
     """
     pos_mask = labels > 0
+    ignore_mask = labels == -1
     num_pos = pos_mask.long().sum(dim=1, keepdim=True)
     num_neg = num_pos * neg_pos_ratio
 
     loss[pos_mask] = -math.inf
+    loss[ignore_mask] = -math.inf
     _, indexes = loss.sort(dim=1, descending=True)
     _, orders = indexes.sort(dim=1)
     neg_mask = orders < num_neg

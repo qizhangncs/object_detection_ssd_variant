@@ -7,7 +7,7 @@ from ..utils import box_utils
 
 
 class MultiboxLoss(nn.Module):
-    def __init__(self, priors, iou_threshold, neg_pos_ratio,
+    def __init__(self, priors, iou_threshold, iou_threshold2, neg_pos_ratio,
                  center_variance, size_variance, device):
         """Implement SSD Multibox Loss.
 
@@ -16,6 +16,7 @@ class MultiboxLoss(nn.Module):
         """
         super(MultiboxLoss, self).__init__()
         self.iou_threshold = iou_threshold
+        self.iou_threshold2 = iou_threshold2
         self.neg_pos_ratio = neg_pos_ratio
         self.center_variance = center_variance
         self.size_variance = size_variance

@@ -175,6 +175,7 @@ def assign_priors(gt_boxes, gt_labels, corner_form_priors,
     # size: num_priors
     labels = gt_labels[best_target_per_prior_index]
     labels[best_target_per_prior < iou_threshold] = 0  # the backgournd id
+    type(labels)
     labels[best_target_per_prior >= iou_threshold and best_target_per_prior < iou_threshold2] = -1  # the backgournd id] = 0  # the backgournd id
     boxes = gt_boxes[best_target_per_prior_index]
     return boxes, labels

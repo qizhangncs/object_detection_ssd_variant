@@ -103,3 +103,14 @@ confidence = torch.tensor([[[10, 9, 8],[11, 8, 7],[2, 18, 15],[11, 1, 12], [12, 
 
 #loss = -F.log_softmax(confidence, dim=2)[:, :, 0]
 
+best_target_per_prior = torch.tensor([0.0000, 0.0000, 0.0000, 0.12, 0.8440, 0.45, 0.55])
+
+labels = torch.tensor([0, 0, 0, 1, 2, 3, 3])
+
+#labels[best_target_per_prior >=0.45] = -1
+labels[(best_target_per_prior >= 0.45) & (best_target_per_prior <0.6)] = -1
+print("labels: ", labels)
+
+
+
+

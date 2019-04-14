@@ -197,7 +197,7 @@ if __name__ == '__main__':
         sys.exit(1)
     train_transform = TrainAugmentation(config.image_size, config.image_mean, config.image_std)
     target_transform = MatchPrior(config.priors, config.center_variance,
-                                  config.size_variance, 0.5)
+                                  config.size_variance, config.iou_threshold, config.iou_threshold2)
 
     test_transform = TestTransform(config.image_size, config.image_mean, config.image_std)
 
@@ -297,7 +297,7 @@ if __name__ == '__main__':
 
     net.to(DEVICE)
 
-    criterion = MultiboxLoss(config.priors, iou_threshold=0.5, neg_pos_ratio=3,
+    criterion = MultiboxLoss(config.priors, iou_threshold=0.4, iou_threshold2=0.6, neg_pos_ratio=3,
                              center_variance=0.1, size_variance=0.2, device=DEVICE)
     optimizer = torch.optim.SGD(params, lr=args.lr, momentum=args.momentum,
                                 weight_decay=args.weight_decay)

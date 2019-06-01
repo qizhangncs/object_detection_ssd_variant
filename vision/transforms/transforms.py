@@ -105,14 +105,14 @@ class ToPercentCoords(object):
 
 
 class Resize(object):
-    def __init__(self, size=300):
-        self.size = size
+    def __init__(self, width=960, height=450):
+        self.height = height
+        self.width = width
 
     def __call__(self, image, boxes=None, labels=None):
-        image = cv2.resize(image, (self.size,
-                                 self.size))
+        #cv2.resize(image, (width, height))
+        image = cv2.resize(image, (self.width, self.height))
         return image, boxes, labels
-
 
 class RandomSaturation(object):
     def __init__(self, lower=0.5, upper=1.5):

@@ -6,10 +6,10 @@ from ..utils.misc import Timer
 
 
 class Predictor:
-    def __init__(self, net, size, mean=0.0, std=1.0, nms_method=None,
+    def __init__(self, net, width, height, mean=0.0, std=1.0, nms_method=None,
                  iou_threshold=0.45, filter_threshold=0.01, candidate_size=200, sigma=0.5, device=None):
         self.net = net
-        self.transform = PredictionTransform(size, mean, std)
+        self.transform = PredictionTransform(width, height, mean, std)
         self.iou_threshold = iou_threshold
         self.filter_threshold = filter_threshold
         self.candidate_size = candidate_size

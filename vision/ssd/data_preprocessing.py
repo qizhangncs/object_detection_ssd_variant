@@ -2,14 +2,15 @@ from ..transforms.transforms import *
 
 
 class TrainAugmentation:
-    def __init__(self, size, mean=0, std=1.0):
+    def __init__(self, width, height, mean=0, std=1.0):
         """
         Args:
-            size: the size the of final image.
+            size: the size the of input image to the neural network.
             mean: mean pixel value per channel.
         """
         self.mean = mean
-        self.size = size
+        self.height = height
+        self.width = width
         self.augment = Compose([
             ConvertFromInts(),
             PhotometricDistort(),
@@ -17,7 +18,7 @@ class TrainAugmentation:
             RandomSampleCrop(),
             RandomMirror(),
             ToPercentCoords(),
-            Resize(self.size),
+            Resize(self.width, self.height),
             SubtractMeans(self.mean),
             lambda img, boxes=None, labels=None: (img / std, boxes, labels),
             ToTensor(),
@@ -35,10 +36,10 @@ class TrainAugmentation:
 
 
 class TestTransform:
-    def __init__(self, size, mean=0.0, std=1.0):
+    def __init__(self, width, height, mean=0.0, std=1.0):
         self.transform = Compose([
             ToPercentCoords(),
-            Resize(size),
+            Resize(width, height),
             SubtractMeans(mean),
             lambda img, boxes=None, labels=None: (img / std, boxes, labels),
             ToTensor(),
@@ -49,9 +50,9 @@ class TestTransform:
 
 
 class PredictionTransform:
-    def __init__(self, size, mean=0.0, std=1.0):
+    def __init__(self, width, height, mean=0.0, std=1.0):
         self.transform = Compose([
-            Resize(size),
+            Resize(width, height),
             SubtractMeans(mean),
             lambda img, boxes=None, labels=None: (img / std, boxes, labels),
             ToTensor()

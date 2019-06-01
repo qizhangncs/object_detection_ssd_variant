@@ -6,23 +6,24 @@ import math
 
 SSDBoxSizes = collections.namedtuple('SSDBoxSizes', ['min', 'max'])
 
-SSDSpec = collections.namedtuple('SSDSpec', ['feature_map_size', 'shrinkage', 'box_sizes', 'aspect_ratios'])
+SSDSpec = collections.namedtuple('SSDSpec', ['feature_map_height', 'feature_map_width', 'shrinkage', 'box_sizes', 'aspect_ratios'])
 
 
-def generate_ssd_priors(specs: List[SSDSpec], image_size, clamp=True) -> torch.Tensor:
+def generate_ssd_priors(specs: List[SSDSpec], image_width, image_height, clamp=True) -> torch.Tensor:
     """Generate SSD Prior Boxes.
 
     It returns the center, height and width of the priors. The values are relative to the image size
     Args:
         specs: SSDSpecs about the shapes of sizes of prior boxes. i.e.
-            specs = [
-                SSDSpec(38, 8, SSDBoxSizes(30, 60), [2]),
-                SSDSpec(19, 16, SSDBoxSizes(60, 111), [2, 3]),
-                SSDSpec(10, 32, SSDBoxSizes(111, 162), [2, 3]),
-                SSDSpec(5, 64, SSDBoxSizes(162, 213), [2, 3]),
-                SSDSpec(3, 100, SSDBoxSizes(213, 264), [2]),
-                SSDSpec(1, 300, SSDBoxSizes(264, 315), [2])
-            ]
+        specs = [
+            SSDSpec(56, 120, 8, SSDBoxSizes(35, 75), [2]),
+            SSDSpec(28, 60, 16, SSDBoxSizes(75, 155), [2, 3]),
+            SSDSpec(14, 30, 32, SSDBoxSizes(155, 235), [2, 3]),
+            SSDSpec(7, 15, 64, SSDBoxSizes(235, 315), [2, 3]),
+            SSDSpec(3, 7, 128, SSDBoxSizes(315, 395), [2]),
+            SSDSpec(1, 3, 256, SSDBoxSizes(395, 475), [2])
+        ]
+
         image_size: image size.
         clamp: if true, clamp the values to make fall between [0.0, 1.0]
     Returns:
@@ -31,14 +32,17 @@ def generate_ssd_priors(specs: List[SSDSpec], image_size, clamp=True) -> torch.T
     """
     priors = []
     for spec in specs:
-        scale = image_size / spec.shrinkage
-        for j, i in itertools.product(range(spec.feature_map_size), repeat=2):
-            x_center = (i + 0.5) / scale
-            y_center = (j + 0.5) / scale
+        scale_x = image_width / spec.shrinkage
+        scale_y = image_height / spec.shrinkage
+        for j, i in itertools.product(range(spec.feature_map_height), range(spec.feature_map_width)):
+            x_center = (i + 0.5) / scale_x
+            y_center = (j + 0.5) / scale_y
 
             # small sized square box
             size = spec.box_sizes.min
-            h = w = size / image_size
+            h = size / image_height
+            w = size / image_width
+
             priors.append([
                 x_center,
                 y_center,
@@ -48,7 +52,9 @@ def generate_ssd_priors(specs: List[SSDSpec], image_size, clamp=True) -> torch.T
 
             # big sized square box
             size = math.sqrt(spec.box_sizes.max * spec.box_sizes.min)
-            h = w = size / image_size
+            h = size / image_height
+            w = size / image_width
+
             priors.append([
                 x_center,
                 y_center,
@@ -58,7 +64,9 @@ def generate_ssd_priors(specs: List[SSDSpec], image_size, clamp=True) -> torch.T
 
             # change h/w ratio of the small sized box
             size = spec.box_sizes.min
-            h = w = size / image_size
+            h = size / image_height
+            w = size / image_width
+
             for ratio in spec.aspect_ratios:
                 ratio = math.sqrt(ratio)
                 priors.append([

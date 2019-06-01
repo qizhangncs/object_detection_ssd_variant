@@ -9,21 +9,15 @@ from torch.utils.data import DataLoader, ConcatDataset
 from torch.optim.lr_scheduler import CosineAnnealingLR, MultiStepLR
 
 from vision.utils.misc import str2bool, Timer, freeze_net_layers, store_labels
-from vision.ssd.ssd import MatchPrior
-from vision.ssd.vgg_ssd import create_vgg_ssd
-from vision.ssd.mobilenetv1_ssd import create_mobilenetv1_ssd
-from vision.ssd.mobilenetv1_ssd_lite import create_mobilenetv1_ssd_lite
-from vision.ssd.mobilenet_v2_ssd_lite import create_mobilenetv2_ssd_lite
-from vision.ssd.squeezenet_ssd_lite import create_squeezenet_ssd_lite
-from vision.ssd.inception3_ssd import  create_inception3_ssd
-from vision.datasets.voc_dataset import VOCDataset
-from vision.datasets.open_images import OpenImagesDataset
+from vision.ssd.inception_ssd_network import MatchPrior
+from vision.ssd.inception_ssd import create_inception_ssd
+
+from vision.datasets.kitti_dataset import KittiDataset
 from vision.nn.multibox_loss import MultiboxLoss
-from vision.ssd.config import vgg_ssd_config
-from vision.ssd.config import mobilenetv1_ssd_config
-from vision.ssd.config import squeezenet_ssd_config
-from vision.ssd.config import inception3_ssd_config
+from vision.ssd.config import inception_ssd_config
 from vision.ssd.data_preprocessing import TrainAugmentation, TestTransform
+from tensorboardX import SummaryWriter
+writer = SummaryWriter('runs')
 
 parser = argparse.ArgumentParser(
     description='Single Shot MultiBox Detector Training With Pytorch')
@@ -38,7 +32,7 @@ parser.add_argument('--balance_data', action='store_true',
 
 
 parser.add_argument('--net', default="vgg16-ssd",
-                    help="The network architecture, it can be mb1-ssd, mb1-lite-ssd, mb2-ssd-lite, inception-ssd or vgg16-ssd.")
+                    help="The network architecture, it can be mb1-ssd, mb1-lite-ssd, mb2-ssd-lite or vgg16-ssd.")
 parser.add_argument('--freeze_base_net', action='store_true',
                     help="Freeze base net layers.")
 parser.add_argument('--freeze_net', action='store_true',
@@ -121,7 +115,7 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
         labels = labels.to(device)
 
         optimizer.zero_grad()
-        confidence, locations = net(images)
+        confidence, locations = net(images) # why the priors are different???
         regression_loss, classification_loss = criterion(confidence, locations, labels, boxes)  # TODO CHANGE BOXES
         loss = regression_loss + classification_loss
         loss.backward()
@@ -143,6 +137,25 @@ def train(loader, net, criterion, optimizer, device, debug_steps=100, epoch=-1):
             running_loss = 0.0
             running_regression_loss = 0.0
             running_classification_loss = 0.0
+            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, i * len(data), len(loader.dataset),
+                       100. * i / len(loader), loss.data[0]))
+            niter = epoch * len(loader) + i  # here, the 'i' is the batch_idx used in the example
+            # writer.add_scalar('Train/Loss', loss.data[0], niter)
+
+            # ====================================================== #
+            #                Tensorboard Logging                     #
+            # ====================================================== #
+
+            info = {'loss': avg_loss, 'regression_loss': avg_reg_loss , 'cls_loss': avg_clf_loss}
+            for tag, value in info.items():
+                writer.add_scalar(tag, value, niter)
+
+            # 2 Log values and gradients of the parameters (histogram summary)
+            for tag, value in net.named_parameters():
+                tag = tag.replace('.', '/')
+                writer.add_histogram(tag, value.data.cpu().numpy(), niter)
+                writer.add_histogram(tag + '/grad', value.grad.data.cpu().numpy(), niter)
 
 
 def test(loader, net, criterion, device):
@@ -173,52 +186,26 @@ if __name__ == '__main__':
     timer = Timer()
 
     logging.info(args)
-    if args.net == 'vgg16-ssd':
-        create_net = create_vgg_ssd
-        config = vgg_ssd_config
-    elif args.net == 'mb1-ssd':
-        create_net = create_mobilenetv1_ssd
-        config = mobilenetv1_ssd_config
-    elif args.net == 'mb1-ssd-lite':
-        create_net = create_mobilenetv1_ssd_lite
-        config = mobilenetv1_ssd_config
-    elif args.net == 'sq-ssd-lite':
-        create_net = create_squeezenet_ssd_lite
-        config = squeezenet_ssd_config
-    elif args.net == 'mb2-ssd-lite':
-        create_net = lambda num: create_mobilenetv2_ssd_lite(num, width_mult=args.mb2_width_mult)
-        config = mobilenetv1_ssd_config
-    elif args.net == 'inception':
-        create_net = create_inception3_ssd
-        config = inception3_ssd_config
+    if args.net == 'inception-ssd':
+        create_net = create_inception_ssd
+        config = inception_ssd_config
     else:
         logging.fatal("The net type is wrong.")
         parser.print_help(sys.stderr)
         sys.exit(1)
-    train_transform = TrainAugmentation(config.image_size, config.image_mean, config.image_std)
-    target_transform = MatchPrior(config.priors, config.center_variance,
-                                  config.size_variance, 0.5)
+    train_transform = TrainAugmentation(config.image_width, config.image_height, config.image_mean, config.image_std)
+    target_transform = MatchPrior(config.priors, config.center_variance, config.size_variance, 0.5)
 
-    test_transform = TestTransform(config.image_size, config.image_mean, config.image_std)
+    test_transform = TestTransform(config.image_width, config.image_height,config.image_mean, config.image_std)
 
     logging.info("Prepare training datasets.")
     datasets = []
     for dataset_path in args.datasets:
-        if args.dataset_type == 'voc':
-            dataset = VOCDataset(dataset_path, transform=train_transform,
-                                 target_transform=target_transform)
-            label_file = os.path.join(args.checkpoint_folder, "voc-model-labels.txt")
+        if  args.dataset_type == 'kitti':
+            dataset = KittiDataset(dataset_path, transform=train_transform, target_transform=target_transform)
+            label_file = os.path.join(args.checkpoint_folder, "kitti-model-labels.txt")
             store_labels(label_file, dataset.class_names)
             num_classes = len(dataset.class_names)
-        elif args.dataset_type == 'open_images':
-            dataset = OpenImagesDataset(dataset_path,
-                 transform=train_transform, target_transform=target_transform,
-                 dataset_type="train", balance_data=args.balance_data)
-            label_file = os.path.join(args.checkpoint_folder, "open-images-model-labels.txt")
-            store_labels(label_file, dataset.class_names)
-            logging.info(dataset)
-            num_classes = len(dataset.class_names)
-
         else:
             raise ValueError(f"Dataset tpye {args.dataset_type} is not supported.")
         datasets.append(dataset)
@@ -229,13 +216,10 @@ if __name__ == '__main__':
                               num_workers=args.num_workers,
                               shuffle=True)
     logging.info("Prepare Validation datasets.")
-    if args.dataset_type == "voc":
-        val_dataset = VOCDataset(args.validation_dataset, transform=test_transform,
-                                 target_transform=target_transform, is_test=True)
-    elif args.dataset_type == 'open_images':
-        val_dataset = OpenImagesDataset(dataset_path,
-                                        transform=test_transform, target_transform=target_transform,
-                                        dataset_type="test")
+    if args.dataset_type == "kitti":
+        val_dataset = KittiDataset(args.validation_dataset, transform=test_transform,
+                                   target_transform=target_transform, is_test=True)
+
         logging.info(val_dataset)
     logging.info("validation dataset size: {}".format(len(val_dataset)))
 
@@ -292,23 +276,25 @@ if __name__ == '__main__':
         net.init_from_base_net(args.base_net)
     elif args.pretrained_ssd:
         logging.info(f"Init from pretrained ssd {args.pretrained_ssd}")
-        net.init_from_pretrained_sscdd(args.pretrained_ssd)
+        net.init_from_pretrained_ssd(args.pretrained_ssd)
     logging.info(f'Took {timer.end("Load Model"):.2f} seconds to load the model.')
 
     net.to(DEVICE)
 
     criterion = MultiboxLoss(config.priors, iou_threshold=0.5, neg_pos_ratio=3,
                              center_variance=0.1, size_variance=0.2, device=DEVICE)
-    optimizer = torch.optim.SGD(params, lr=args.lr, momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+    # optimizer = torch.optim.SGD(params, lr=args.lr, momentum=args.momentum,
+    #                             weight_decay=args.weight_decay)
+
+    optimizer = torch.optim.Adam(params, lr=args.lr, weight_decay=args.weight_decay)
+
     logging.info(f"Learning rate: {args.lr}, Base net learning rate: {base_net_lr}, "
                  + f"Extra Layers learning rate: {extra_layers_lr}.")
 
     if args.scheduler == 'multi-step':
         logging.info("Uses MultiStepLR scheduler.")
         milestones = [int(v.strip()) for v in args.milestones.split(",")]
-        scheduler = MultiStepLR(optimizer, milestones=milestones,
-                                                     gamma=0.1, last_epoch=last_epoch)
+        scheduler = MultiStepLR(optimizer, milestones=milestones,gamma=0.1, last_epoch=last_epoch)
     elif args.scheduler == 'cosine':
         logging.info("Uses CosineAnnealingLR scheduler.")
         scheduler = CosineAnnealingLR(optimizer, args.t_max, last_epoch=last_epoch)

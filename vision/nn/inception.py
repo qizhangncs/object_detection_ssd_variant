@@ -91,6 +91,29 @@ class Inception3(nn.Module):
         #     nn.AvgPool2d(kernel_size=8),
         #     self.fc
         # )
+
+        ### can we include the reduction size block into the base_net?
+        # self.layers = nn.Sequential(
+        #     self.Conv2d_1a_3x3,
+        #     self.Conv2d_2a_3x3,
+        #     self.Conv2d_2b_3x3,
+        #     nn.MaxPool2d(kernel_size=3, stride=2),
+        #     self.Conv2d_3b_1x1,
+        #     self.Conv2d_4a_3x3,
+        #     nn.MaxPool2d(kernel_size=3, stride=2),
+        #     self.Mixed_5b,
+        #     self.Mixed_5c,
+        #     self.Mixed_5d,
+        #     self.Mixed_6a,
+        #     self.Mixed_6b,
+        #     self.Mixed_6c,
+        #     self.Mixed_6d,
+        #     self.Mixed_6e
+        # )
+
+
+        # Registration is based on this configuration, source_layer_indexes
+
         self.layers = nn.Sequential(
             self.Conv2d_1a_3x3,
             self.Conv2d_2a_3x3,

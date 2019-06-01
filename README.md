@@ -153,6 +153,19 @@ The code to re-produce the model:
 wget -P models https://s3.amazonaws.com/amdegroot-models/vgg16_reducedfc.pth
 python train_ssd.py --datasets ~/data/VOC0712/VOC2007/ ~/data/VOC0712/VOC2012/ --validation_dataset ~/data/VOC0712/test/VOC2007/ --net vgg16-ssd --base_net models/vgg16_reducedfc.pth  --batch_size 24 --num_epochs 200 --scheduler "multi-step” —-milestones “120,160”
 ```
+
+### inception3 SSD
+
+```
+USING kitti dataset train sample 6300, validation samples 1000
+
+Average Precision Per-class:
+car: 0.8952602621135978
+cyclist: 0.7249299719887956
+pedestrian: 0.6076540992577417
+
+Average Precision Across All Classes:0.7426147777867117
+```
 ## Training
 
 ```bash
